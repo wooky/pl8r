@@ -6,9 +6,11 @@
         <link rel="stylesheet" href="https://cdn.datatables.net/2.0.3/css/dataTables.dataTables.css" />
         <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
         <script src="https://cdn.datatables.net/2.0.3/js/dataTables.js"></script>
-        <script src="script.js"></script>
     </head>
     <body>
+        <div class="header">
+            <a href="/" class="homelink"><img src="https://yakov.ca/include/logo.png" alt="JY">JustYakov</a>
+        </div>
         <h1>License Plate Categorizer & Organizer</h1>
         <table id="pl8r">
             <thead>
@@ -29,11 +31,12 @@
                             <option>Alberta</option>
                         </select>
                     </td>
-                    <td>
+                    <td colspan="3">
                         <input type="text">
                     </td>
                 </tr>
             </tfoot>
         </table>
+        <script src="script.js"></script>
     </body>
 </html>
