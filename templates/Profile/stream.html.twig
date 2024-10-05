@@ -1,0 +1,12 @@
+{%- block edit_username_success -%}
+<turbo-stream action="update" targets=".app-user-username"><template>{{ app.user.username }}</template></turbo-stream>
+<turbo-stream action="replace" target="app-profile-edit-username"><template>
+<twig:Profile:EditUsername form="{{ form }}" />
+</template></turbo-stream>
+{%- endblock -%}
+
+{%- block edit_username_fail -%}
+<turbo-stream action="replace" target="app-profile-edit-username"><template>
+<twig:Profile:EditUsername form="{{ form }}" />
+</template></turbo-stream>
+{%- endblock -%}

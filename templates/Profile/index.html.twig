@@ -1,0 +1,24 @@
+{%- extends 'base.html.twig' -%}
+
+{% block title %}Hello IndexController!{% endblock %}
+
+{% block body %}
+<div class="container">
+  <h1 class="title">Your Profile</h1>
+  {%- if app.flashes('profile') -%}
+  <div class="notification is-success">Welcome to Pl8r! Please fill out your profile.</div>
+  {%- endif -%}
+  <section class="section">
+    <h2 class="subtitle">Personalization</h2>
+    TODO "Default plate authority"
+  </section>
+  <section class="section">
+    <h2 class="subtitle">Edit Username</h2>
+    <twig:Profile:EditUsername />
+  </section>
+  <section class="section">
+    <h2 class="subtitle">Authentication Methods</h2>
+    TODO
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello IndexController!{% endblock %}
+
+{% block body %}
+<section class="hero is-fullheight-with-navbar">
+  {% if error %}
+  <div class="hero-head">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+  {% endif %}
+  <div class="hero-body">
+    <form class="container" action="{{ path('app_login') }}" method="post">
+      <div class="field is-horizontal">
+        <div class="field-body">
+          <div class="field is-expanded">
+            <div class="is-size-1 has-text-centered">Log In to Pl8r</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field is-horizontal">
+        <div class="field-label is-normal">
+          <label class="label" for="username">Username</label>
+        </div>
+        <div class="field-body">
+          <div class="field is-expanded">
+            <div class="control">
+              <input class="input" type="text" id="username" name="_username" value="{{ last_username }}" required>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field is-horizontal">
+        <div class="field-label is-normal">
+          <label class="label" for="password">Password</label>
+        </div>
+        <div class="field-body">
+          <div class="field is-expanded">
+            <div class="control">
+              <input class="input" type="password" id="password" name="_password" required>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field is-horizontal">
+        <div class="field-label is-normal"></div>
+        <div class="field-body">
+          <div class="field is-expanded">
+            <div class="control">
+              <button class="button is-primary is-fullwidth" type="submit">Log In</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field is-horizontal">
+        <div class="field-label is-normal"></div>
+        <div class="field-body">
+          <div class="field is-expanded">
+            <div class="control">
+              <a class="button is-fullwidth" href="{{ url('app_register') }}">Register</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field is-horizontal">
+        <div class="field-label is-normal"></div>
+        <div class="field-body">
+          <div class="field is-expanded">
+            <div class="control">
+              <a class="button is-fullwidth" href="{{ url('app_login_google') }}">Sign In with Google</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+    </form>
+  </div>
+</section>
+{% endblock %}

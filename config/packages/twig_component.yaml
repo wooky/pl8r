@@ -1,0 +1,5 @@
+twig_component:
+    anonymous_template_directory: './'
+    defaults:
+        # Namespace & directory for components
+        Pl8r\Component\: './'

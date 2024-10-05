@@ -1,0 +1,12 @@
+services:
+  app:
+    build: .
+    ports:
+      - 8080:80
+  db:
+    image: mariadb
+    environment:
+      - MARIADB_USER=pl8r
+      - MARIADB_PASSWORD=pl8r
+      - MARIADB_DATABASE=pl8r
+      - MARIADB_ROOT_PASSWORD=pl8r

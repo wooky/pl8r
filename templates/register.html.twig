@@ -1,0 +1,14 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Register{% endblock %}
+
+{% block body %}
+<section class="hero is-fullheight-with-navbar">
+  <div class="hero-head">{{ form_errors(registrationForm) }}</div>
+  <div class="hero-body">
+    <div class="container">
+      {{ form(registrationForm) }}
+    </div>
+  </div>
+</section>
+{% endblock %}
