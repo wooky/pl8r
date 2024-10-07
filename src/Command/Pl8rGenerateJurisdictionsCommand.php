@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pl8r\Command;
 
+use Pl8r\Component\Jurisdiction\JurisdictionRepository;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -12,7 +13,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Path;
-use Symfony\Component\Serializer\SerializerInterface;
 
 #[AsCommand(
   name: 'pl8r:generate-jurisdictions',
@@ -22,11 +22,9 @@ class Pl8rGenerateJurisdictionsCommand extends Command
   private ?SymfonyStyle $io = null;
   private string $svgPath = '';
 
-  /** @var array<string,\DOMDocument> */ private array $svgCollections = [];
-
   public function __construct(
     private Filesystem $filesystem,
-    private SerializerInterface $serializer,
+    private JurisdictionRepository $jurisdictionRepository,
   ) {
     parent::__construct();
   }
@@ -53,44 +51,29 @@ class Pl8rGenerateJurisdictionsCommand extends Command
       return Command::FAILURE;
     }
 
-    $jurisdictions = $this->serializer->deserialize(
-      $this->filesystem->readFile('./misc/jurisdictions/jurisdictions.csv'),
-      JurisdictionCsvLine::class.'[]',
-      'csv'
-    );
-    \assert(\is_array($jurisdictions));
-    foreach ($jurisdictions as $jurisdiction) {
-      \assert($jurisdiction instanceof JurisdictionCsvLine);
-      $idComponents = explode(string: $jurisdiction->id, separator: '-');
-      if (isset($idComponents[1])) {
-        $parent = $idComponents[0];
-        $child = $idComponents[1];
-      } else {
-        $parent = null;
-        $child = $idComponents[0];
-      }
-
-      $iso = \strlen($jurisdiction->flag) >= 2 ? $jurisdiction->flag : $jurisdiction->id;
-      $this->addToSvg($parent, $child, $iso);
-    }
-
     $assetsDir = Path::join('assets', 'generated', 'jurisdictions');
     $this->filesystem->remove($assetsDir);
     $this->filesystem->mkdir($assetsDir);
-    foreach ($this->svgCollections as $key => $doc) {
-      $svgPath = Path::join($assetsDir, "{$key}.svg");
-      if (false === $doc->save($svgPath)) {
-        $error = libxml_get_last_error() ? libxml_get_last_error()->message : 'unknown';
-        $this->io->error(["Failed to save {$svgPath}", $error]);
 
-        return Command::FAILURE;
+    $globalCollection = null;
+    foreach ($this->jurisdictionRepository->jurisdictions as $countryCode => $country) {
+      $globalCollection = $this->addToSvg($globalCollection, $countryCode, $countryCode);
+
+      if (isset($country[JurisdictionRepository::KEY_COUNTRY_SUBDIVISIONS])) {
+        $localCollection = null;
+        foreach ($country[JurisdictionRepository::KEY_COUNTRY_SUBDIVISIONS] as $subdivisionCode => $subdivision) {
+          $iso = $subdivision[JurisdictionRepository::KEY_SUBDIVISION_USE_ISO] ? $subdivisionCode : "{$countryCode}-{$subdivisionCode}";
+          $localCollection = $this->addToSvg($localCollection, $subdivisionCode, $iso);
+        }
+        self::saveSvgCollection($localCollection, $countryCode, $assetsDir);
       }
     }
+    self::saveSvgCollection($globalCollection, 'global', $assetsDir);
 
     return Command::SUCCESS;
   }
 
-  private function addToSvg(?string $parent, string $child, string $iso): void
+  private function addToSvg(?\DOMDocument $svgCollection, string $child, string $iso): ?\DOMDocument
   {
     $flagPath = Path::join($this->svgPath, "{$iso}.svg");
     $svgDoc = new \DOMDocument();
@@ -98,32 +81,44 @@ class Pl8rGenerateJurisdictionsCommand extends Command
       $error = libxml_get_last_error() ? libxml_get_last_error()->message : 'unknown';
       $this->io?->writeln("<comment>Cannot read {$flagPath}: {$error}</comment>");
 
-      return;
+      return $svgCollection;
     }
     $svg = $svgDoc->firstElementChild;
     \assert(null !== $svg && 'svg' === $svg->nodeName);
 
-    $parent ??= 'global';
-    if (!isset($this->svgCollections[$parent])) {
-      $doc = new \DOMDocument();
-      $doc->loadXML('<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><defs></defs></svg>');
-      $this->svgCollections[$parent] = $doc;
-    } else {
-      $doc = $this->svgCollections[$parent];
+    if (null === $svgCollection) {
+      $svgCollection = new \DOMDocument();
+      $svgCollection->loadXML('<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><defs></defs></svg>');
     }
-    $defs = $doc->firstElementChild?->firstElementChild;
+    $defs = $svgCollection->firstElementChild?->firstElementChild;
     \assert(null !== $defs);
 
     $viewBox = $svg->getAttribute('viewBox') ?: "0 0 {$svg->getAttribute('width')} {$svg->getAttribute('height')}";
-    $symbol = $doc->createElement('symbol');
+    $symbol = $svgCollection->createElement('symbol');
     $symbol->setAttribute('id', $child);
     $symbol->setAttribute('viewBox', $viewBox);
     while (isset($svg->childNodes[0])) {
       $childNode = $svg->childNodes[0];
       \assert($childNode instanceof \DOMNode);
-      $doc->adoptNode($childNode);
+      $svgCollection->adoptNode($childNode);
       $symbol->appendChild($childNode);
     }
     $defs->appendChild($symbol);
+
+    return $svgCollection;
+  }
+
+  private static function saveSvgCollection(?\DOMDocument $svgCollection, string $code, string $assetsDir): void
+  {
+    if (null === $svgCollection) {
+      return;
+    }
+
+    $svgPath = Path::join($assetsDir, "{$code}.svg");
+    if (false === $svgCollection->save($svgPath)) {
+      $error = libxml_get_last_error() ? libxml_get_last_error()->message : 'unknown';
+
+      throw new \Exception("Failed to save {$svgPath}: {$error}");
+    }
   }
 }
