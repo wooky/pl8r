@@ -25,7 +25,7 @@
         <directory name="var/cache/dev/Symfony/Config" />
     </extraFiles>
     <stubs>
-        <file name=".stubs/ServiceEntityRepository.phpstub" preloadClasses="true" />
+        <file name="misc/psalm-stubs/ServiceEntityRepository.phpstub" preloadClasses="true" />
     </stubs>
     <plugins>
         <pluginClass class="Psalm\SymfonyPsalmPlugin\Plugin">
